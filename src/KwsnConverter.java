@@ -29,6 +29,10 @@ public class KwsnConverter {
      */
     private ArrayList<Program> programs = new ArrayList<>();
 
+    public static final int UNICAST = 1;
+
+    public static final int BROADCAST = 2;
+
     /**
      *
      */
@@ -37,47 +41,54 @@ public class KwsnConverter {
      * convert kwsn file to pnml
      * @param path
      */
-    public Pnml convert(String path) throws JAXBException {
+    public Pnml convert(String path,int chanelMode) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(WSN.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         WSN wsn = (WSN) unmarshaller.unmarshal(new File(path));
         Pnml pnml = new Pnml();
         declaration = new Declaration(wsn.Declaration);
         for(Kwsn.Process process : wsn.Network.processes) {
+            ////Convert Sensor
             for (Sensor sensor : process.sensors.listSensor) {
                 sensor.convertToPnml(pnml, InputPlaces, OutputPlaces , programs);
             }
-            for (Link link : process.links.listLinks) {
-                link.convertToPnml(pnml, InputPlaces, OutputPlaces , programs);
+            ////Convert chanel
+            if(chanelMode == UNICAST){
+                for (Link link : process.links.listLinks) {
+                    link.convertToPnml(pnml, InputPlaces, OutputPlaces , programs);
+                }
+            }else if(chanelMode == BROADCAST){
+                for(int i = 0 ;i < process.links.listLinks.size();i++){
+                    BroastcastLink link = new BroastcastLink(process.links.listLinks.get(i),i);
+                    for(int j = 0 ; j < process.links.listLinks.size();j++){
+                        if(i != j && link.From.equals(process.links.listLinks.get(j).From)){
+                            link.To.add(process.links.listLinks.get(j).To);
+                            link.Program.add(process.links.listLinks.get(j).Program);
+                            process.links.listLinks.remove(j);
+                        }
+                    }
+                    link.convertToPnml(pnml,InputPlaces,OutputPlaces,programs);
+                }
             }
         }
         programs.add(new Program("main",""));
         return pnml;
     }
 
-    public void SaveConvertFile(String sourcePath, String folderPath){
+    public void SaveConvertFile(String sourcePath, String folderPath,int chanelMode){
 
         try {
             File file = new File(sourcePath);
             String sourceFileName = file.getName().split("\\.")[0];
 
-            Pnml pnml = convert(sourcePath);
+            Pnml pnml = convert(sourcePath,chanelMode);
             JAXBContext context = JAXBContext.newInstance(Pnml.class);
             Marshaller marshaller = context.createMarshaller();
             //Save normal file
-            marshaller.marshal(pnml,new File(folderPath+"\\"+sourceFileName+".pmnl"));
-            FunctionFileWriter.Write(folderPath+"\\"+sourceFileName+".txt",programs,declaration,false);
-            //Save minimize file
-            for(Place p : pnml.net.places){
-                if(p.token > 0){
-                    p.token = 1;
-                }
-            }
-            for(Arc arc : pnml.net.arcs){
-                arc.weight = 1;
-            }
-            marshaller.marshal(pnml,new File(folderPath+"\\"+sourceFileName+"_minimize.pnml"));
-            FunctionFileWriter.Write(folderPath+"\\"+sourceFileName+"_minimize.txt",programs,declaration,true);
+            marshaller.marshal(pnml,new File(folderPath+sourceFileName+".pmnl"));
+
+            FunctionFileWriter.Write(folderPath+sourceFileName+".txt",programs,declaration,false);
+            FunctionFileWriter.Write(folderPath+sourceFileName+"_minimize.txt",programs,declaration,true);
 
         } catch (JAXBException e) {
             e.printStackTrace();

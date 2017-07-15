@@ -21,32 +21,64 @@ public class Link{
     @XmlElement(name = "Program")
     public String Program;
 
+    /**
+     * Convert to pnml in unicast mode
+     * @param pnml
+     * @param InputPlaces
+     * @param OutputPlace
+     * @param programs
+     */
     public void convertToPnml(Pnml pnml, HashMap<String,String> InputPlaces, HashMap<String,String> OutputPlace, ArrayList<Program> programs){
 
-        //Create transiton
-        Transition transition = new Transition();
-        transition.id="Transition"+this.id;
-        transition.label=id;
+        Place intermediatePlace = new Place();
+        intermediatePlace.id="Intermediate"+this.id;
+        intermediatePlace.label = "Intermediate "+this.id;
 
-        //Create Arc
-        Arc in = new Arc();
-        in.id = "In"+this.id;
-        in.weight = Integer.parseInt(this.MaxSendingRate);
-        in.direction = ArcDirection.PLACE_TO_TRANSITION;
-        in.place = OutputPlace.get(this.From);
-        in.transition = transition.id;
+        Transition receive = new Transition();
+        receive.id = "receive"+this.id;
+        receive.label = "recive "+this.id;
 
-        Arc out = new Arc();
-        out.id = "Out"+this.id;
-        out.weight = Integer.parseInt(this.MaxSendingRate);
-        out.direction = ArcDirection.TRANSITION_TO_PLACE;
-        out.transition = transition.id;
-        out.place = InputPlaces.get(this.To);
+        Transition send = new Transition();
+        send.id = "send"+this.id;
+        send.label = "send "+this.id;
 
-        pnml.net.transitions.add(transition);
-        pnml.net.arcs.add(in);
-        pnml.net.arcs.add(out);
+        Arc beforeReceive = new Arc();
+        beforeReceive.id = "beforeReceive"+this.id;
+        beforeReceive.weight = 1;
+        beforeReceive.direction = ArcDirection.PLACE_TO_TRANSITION;
+        beforeReceive.place = OutputPlace.get(this.From);
+        beforeReceive.transition = receive.id;
 
-        programs.add(new Program(transition.id,this.Program));
+        Arc afterReceive = new Arc();
+        afterReceive.id="afterReceive"+this.id;
+        afterReceive.weight = 1;
+        afterReceive.direction = ArcDirection.TRANSITION_TO_PLACE;
+        afterReceive.place = intermediatePlace.id;
+        afterReceive.transition = receive.id;
+
+        Arc beforeSend = new Arc();
+        beforeSend.id = "beforeSend"+this.id;
+        beforeSend.weight = 1;
+        beforeSend.direction = ArcDirection.PLACE_TO_TRANSITION;
+        beforeSend.place = intermediatePlace.id;
+        beforeSend.transition = send.id;
+
+        Arc afterSend = new Arc();
+        afterSend.id="afterSend"+this.id;
+        afterSend.weight = 1;
+        afterSend.direction = ArcDirection.TRANSITION_TO_PLACE;
+        afterSend.place = InputPlaces.get(this.To);
+        afterSend.transition = send.id;
+
+        pnml.net.places.add(intermediatePlace);
+        pnml.net.transitions.add(receive);
+        pnml.net.transitions.add(send);
+        pnml.net.arcs.add(beforeReceive);
+        pnml.net.arcs.add(afterReceive);
+        pnml.net.arcs.add(beforeSend);
+        pnml.net.arcs.add(afterSend);
+
+        programs.add(new Program(receive.id,this.Program));
+        programs.add(new Program(send.id,""));
     }
 }

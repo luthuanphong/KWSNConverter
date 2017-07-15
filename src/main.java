@@ -15,7 +15,8 @@ public class main {
         //WSN wsn = (WSN) unmarshaller.unmarshal(new File("C:\\Data\\luanvan\\GraduationThesis\\5-sensors.kwsn"));
 
         KwsnConverter converter = new KwsnConverter();
-        converter.SaveConvertFile("C:\\Data\\luanvan\\GraduationThesis\\5-sensors.kwsn","C:\\Users\\FredLu\\Desktop\\");
+        converter.SaveConvertFile("/home/fredlu/Downloads/5-sensors.kwsn",
+                "/home/fredlu/Downloads/",KwsnConverter.UNICAST);
 
     }
 }
