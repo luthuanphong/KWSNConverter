@@ -16,7 +16,7 @@ public class main {
 
         KwsnConverter converter = new KwsnConverter();
         converter.SaveConvertFile("/home/fredlu/Downloads/5-sensors.kwsn",
-                "/home/fredlu/Downloads/",KwsnConverter.UNICAST);
+                "/home/fredlu/Downloads/",KwsnConverter.BROADCAST);
 
     }
 }

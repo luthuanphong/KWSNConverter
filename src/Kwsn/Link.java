@@ -5,6 +5,7 @@ import Pnml.*;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,7 +29,10 @@ public class Link{
      * @param OutputPlace
      * @param programs
      */
-    public void convertToPnml(Pnml pnml, HashMap<String,String> InputPlaces, HashMap<String,String> OutputPlace, ArrayList<Program> programs){
+    public void convertToPnml(
+            Pnml pnml, HashMap<String,String> InputPlaces,
+            HashMap<String,String> OutputPlace,
+            ArrayList<Program> programs,ArrayList<Variable> variables){
 
         Place intermediatePlace = new Place();
         intermediatePlace.id="Intermediate"+this.id;
@@ -77,6 +81,9 @@ public class Link{
         pnml.net.arcs.add(afterReceive);
         pnml.net.arcs.add(beforeSend);
         pnml.net.arcs.add(afterSend);
+
+        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.id,this.MaxSendingRate));
+        variables.add(new Variable(BasicType.INT,"Buffer_"+this.id,"0"));
 
         programs.add(new Program(receive.id,this.Program));
         programs.add(new Program(send.id,""));

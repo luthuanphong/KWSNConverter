@@ -29,6 +29,11 @@ public class KwsnConverter {
      */
     private ArrayList<Program> programs = new ArrayList<>();
 
+    /***
+     * Líst of variable
+     */
+    private ArrayList<Variable> variables = new ArrayList<>();
+
     public static final int UNICAST = 1;
 
     public static final int BROADCAST = 2;
@@ -47,15 +52,18 @@ public class KwsnConverter {
         WSN wsn = (WSN) unmarshaller.unmarshal(new File(path));
         Pnml pnml = new Pnml();
         declaration = new Declaration(wsn.Declaration);
+        variables.add(new Variable(BasicType.INT,Constants.SENSOR_MAX_BUFFER_SZIE,wsn.Network.SensorMaxBufferSize));
+        variables.add(new Variable(BasicType.INT,Constants.SENSOR_MAX_QUEUE_SIZE,wsn.Network.SensorMaxQueueSize));
+        variables.add(new Variable(BasicType.INT,Constants.CHANEL_MAX_BUFFER_SIZE,wsn.Network.ChannelMaxBufferSize));
         for(Kwsn.Process process : wsn.Network.processes) {
             ////Convert Sensor
             for (Sensor sensor : process.sensors.listSensor) {
-                sensor.convertToPnml(pnml, InputPlaces, OutputPlaces , programs);
+                sensor.convertToPnml(pnml, InputPlaces, OutputPlaces , programs,variables);
             }
             ////Convert chanel
             if(chanelMode == UNICAST){
                 for (Link link : process.links.listLinks) {
-                    link.convertToPnml(pnml, InputPlaces, OutputPlaces , programs);
+                    link.convertToPnml(pnml, InputPlaces, OutputPlaces , programs,variables);
                 }
             }else if(chanelMode == BROADCAST){
                 for(int i = 0 ;i < process.links.listLinks.size();i++){
@@ -67,7 +75,7 @@ public class KwsnConverter {
                             process.links.listLinks.remove(j);
                         }
                     }
-                    link.convertToPnml(pnml,InputPlaces,OutputPlaces,programs);
+                    link.convertToPnml(pnml,InputPlaces,OutputPlaces,programs,variables);
                 }
             }
         }
@@ -87,8 +95,8 @@ public class KwsnConverter {
             //Save normal file
             marshaller.marshal(pnml,new File(folderPath+sourceFileName+".pmnl"));
 
-            FunctionFileWriter.Write(folderPath+sourceFileName+".txt",programs,declaration,false);
-            FunctionFileWriter.Write(folderPath+sourceFileName+"_minimize.txt",programs,declaration,true);
+            FunctionFileWriter.Write(folderPath+sourceFileName+".txt",programs,variables,false);
+            FunctionFileWriter.Write(folderPath+sourceFileName+"_minimize.txt",programs,variables,true);
 
         } catch (JAXBException e) {
             e.printStackTrace();

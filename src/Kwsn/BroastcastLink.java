@@ -28,7 +28,7 @@ public class BroastcastLink {
 
     public void convertToPnml(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace, ArrayList<Program> programs){
+            HashMap<String,String> OutputPlace, ArrayList<Program> programs,ArrayList<Variable> variables){
         Place intermediate = new Place();
         intermediate.id = "Intermediate"+this.id;
         intermediate.label = "Intermediate "+this.id;
@@ -84,6 +84,9 @@ public class BroastcastLink {
         for(int i = 0 ; i < Program.size() ;i++){
             program.append(this.Program.get(i));
         }
+
+        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.id,this.MaxSendingRate+""));
+        variables.add(new Variable(BasicType.INT,"Buffer_"+this.id,"0"));
 
         programs.add(new Program(receive.id,program.toString()));
         programs.add(new Program(send.id,""));

@@ -29,23 +29,23 @@ public class Sensor {
      */
     public void convertToPnml(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> programs){
+            HashMap<String,String> OutputPlace , ArrayList<Program> programs , ArrayList<Variable> variables){
         switch (this.Type){
             case 1:
-                convertSourceNode(pnml,InputPlaces,OutputPlace,programs);
+                convertSourceNode(pnml,InputPlaces,OutputPlace,programs,variables);
                 break;
             case 2:
-                convertSinkNode(pnml,InputPlaces,OutputPlace,programs);
+                convertSinkNode(pnml,InputPlaces,OutputPlace,programs,variables);
                 break;
             case 3:
-                convertIntermediateNode(pnml,InputPlaces,OutputPlace,programs);
+                convertIntermediateNode(pnml,InputPlaces,OutputPlace,programs,variables);
                 break;
         }
     }
 
     private void convertSourceNode(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> program){
+            HashMap<String,String> OutputPlace , ArrayList<Program> program, ArrayList<Variable> variables){
         Place inputPlace = new Place();
         inputPlace.id = "In"+this.Id;
         if(Init.equals("True")){
@@ -112,12 +112,17 @@ public class Sensor {
         pnml.net.arcs.add(beforeSend);
         pnml.net.arcs.add(afterSend);
 
+        variables.add(new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate));
+        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate));
+        variables.add(new Variable(BasicType.INT,"Buffer_"+this.Id,"0"));
+        variables.add(new Variable(BasicType.INT,"Queue_"+this.Id,"0"));
+
         program.add(new Program(generate.id,""));
         program.add(new Program(send.id,""));
     }
     private void convertSinkNode(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> program){
+            HashMap<String,String> OutputPlace , ArrayList<Program> program, ArrayList<Variable> variables){
         Place inputPlace = new Place();
         inputPlace.id = "In"+this.Id;
         inputPlace.label = "Input "+this.Name;
@@ -165,7 +170,7 @@ public class Sensor {
 
         Arc afterProcess = new Arc();
         afterProcess.id="afterProcess"+this.Id;
-        afterProcess.weight = Integer.parseInt(this.MaxSendingRate);
+        afterProcess.weight = 1;
         afterProcess.direction=ArcDirection.TRANSITION_TO_PLACE;
         afterProcess.place = outPlace.id;
         afterProcess.transition = process.id;
@@ -180,12 +185,17 @@ public class Sensor {
         pnml.net.arcs.add(beforeProcess);
         pnml.net.arcs.add(afterProcess);
 
+        variables.add(new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate));
+        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate));
+        variables.add(new Variable(BasicType.INT,"Buffer_"+this.Id,"0"));
+        variables.add(new Variable(BasicType.INT,"Queue_"+this.Id,"0"));
+
         program.add(new Program(receive.id,""));
         program.add(new Program(process.id,""));
     }
     private void convertIntermediateNode(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> program){
+            HashMap<String,String> OutputPlace , ArrayList<Program> program, ArrayList<Variable> variables){
         Place inputPlace = new Place();
         inputPlace.id = "In"+this.Id;
         inputPlace.label = "Input "+this.Name;
@@ -247,6 +257,11 @@ public class Sensor {
         pnml.net.arcs.add(afterReceive);
         pnml.net.arcs.add(beforeSend);
         pnml.net.arcs.add(afterSend);
+
+        variables.add(new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate));
+        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate));
+        variables.add(new Variable(BasicType.INT,"Buffer_"+this.Id,"0"));
+        variables.add(new Variable(BasicType.INT,"Queue_"+this.Id,"0"));
 
         program.add(new Program(receive.id,""));
         program.add(new Program(send.id,""));
