@@ -6,6 +6,7 @@ import Pnml.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 @XmlRootElement(name = "Sensor")
 public class Sensor {
@@ -21,6 +22,53 @@ public class Sensor {
     public String Init;
     @XmlAttribute(name = "SType")
     public int Type;
+
+    private Variable Buffer;
+    private Variable Queue;
+    private Variable ProcessRate;
+    private Variable SendingRate;
+    private List<Program> programList;
+
+    private Program generateProgram;
+    private Program sendProgram;
+    private Program receiveProgram;
+    private Program processProgram;
+
+    public List<Program> getPrograms(){
+        if(programList == null){
+            this.programList = new ArrayList<>();
+        }
+        return this.programList;
+    }
+
+
+    public Variable getBuffer(){
+        if(this.Buffer == null){
+            this.Buffer = new Variable(BasicType.INT,"Buffer_"+this.Id,"0");
+        }
+        return Buffer;
+    }
+
+    public Variable getQueue(){
+        if(this.Queue == null){
+            this.Queue = new Variable(BasicType.INT,"Queue_"+this.Id,"0");
+        }
+        return Queue;
+    }
+
+    public Variable getProcessRate(){
+        if(this.ProcessRate == null){
+            this.ProcessRate = new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate);
+        }
+        return this.ProcessRate;
+    }
+
+    public Variable getSendingRate(){
+        if(this.SendingRate == null){
+            this.SendingRate = new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate);
+        }
+        return this.SendingRate;
+    }
     /**
      * Convert sensor to pnml structure
      * @param pnml pnml object used to store convert data
@@ -41,11 +89,15 @@ public class Sensor {
                 convertIntermediateNode(pnml,InputPlaces,OutputPlace,programs,variables);
                 break;
         }
+        variables.add(getProcessRate());
+        variables.add(getSendingRate());
+        variables.add(getBuffer());
+        variables.add(getQueue());
     }
 
     private void convertSourceNode(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> program, ArrayList<Variable> variables){
+            HashMap<String,String> OutputPlace , ArrayList<Program> programs, ArrayList<Variable> variables){
         Place inputPlace = new Place();
         inputPlace.id = "In"+this.Id;
         if(Init.equals("True")){
@@ -112,17 +164,19 @@ public class Sensor {
         pnml.net.arcs.add(beforeSend);
         pnml.net.arcs.add(afterSend);
 
-        variables.add(new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate));
-        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate));
-        variables.add(new Variable(BasicType.INT,"Buffer_"+this.Id,"0"));
-        variables.add(new Variable(BasicType.INT,"Queue_"+this.Id,"0"));
+        generateProgram =
+                new Program(generate.id,Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate()));
+        sendProgram =
+                new Program(send.id,Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate()));
 
-        program.add(new Program(generate.id,""));
-        program.add(new Program(send.id,""));
+        getPrograms().add(generateProgram);
+        getPrograms().add(sendProgram);
+        programs.add(generateProgram);
+        programs.add(sendProgram);
     }
     private void convertSinkNode(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> program, ArrayList<Variable> variables){
+            HashMap<String,String> OutputPlace , ArrayList<Program> programs, ArrayList<Variable> variables){
         Place inputPlace = new Place();
         inputPlace.id = "In"+this.Id;
         inputPlace.label = "Input "+this.Name;
@@ -185,17 +239,17 @@ public class Sensor {
         pnml.net.arcs.add(beforeProcess);
         pnml.net.arcs.add(afterProcess);
 
-        variables.add(new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate));
-        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate));
-        variables.add(new Variable(BasicType.INT,"Buffer_"+this.Id,"0"));
-        variables.add(new Variable(BasicType.INT,"Queue_"+this.Id,"0"));
+        receiveProgram = new Program(receive.id,"");
+        processProgram = new Program(process.id,"");
 
-        program.add(new Program(receive.id,""));
-        program.add(new Program(process.id,""));
+        getPrograms().add(receiveProgram);
+        getPrograms().add(processProgram);
+        programs.add(receiveProgram);
+        programs.add(processProgram);
     }
     private void convertIntermediateNode(
             Pnml pnml, HashMap<String,String> InputPlaces,
-            HashMap<String,String> OutputPlace , ArrayList<Program> program, ArrayList<Variable> variables){
+            HashMap<String,String> OutputPlace , ArrayList<Program> programs, ArrayList<Variable> variables){
         Place inputPlace = new Place();
         inputPlace.id = "In"+this.Id;
         inputPlace.label = "Input "+this.Name;
@@ -258,12 +312,47 @@ public class Sensor {
         pnml.net.arcs.add(beforeSend);
         pnml.net.arcs.add(afterSend);
 
-        variables.add(new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate));
-        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate));
-        variables.add(new Variable(BasicType.INT,"Buffer_"+this.Id,"0"));
-        variables.add(new Variable(BasicType.INT,"Queue_"+this.Id,"0"));
+        receiveProgram = new Program(receive.id,"");
+        sendProgram = new Program(send.id,"");
 
-        program.add(new Program(receive.id,""));
-        program.add(new Program(send.id,""));
+        getPrograms().add(receiveProgram);
+        getPrograms().add(sendProgram);
+
+        programs.add(receiveProgram);
+        programs.add(sendProgram);
+    }
+
+    public void generateCode(Link link){
+        switch (this.Type){
+            case 1:
+                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                break;
+            case 2:
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
+                processProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
+                break;
+            case 3:
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                break;
+        }
+    }
+
+    public void generateCode(BroastcastLink link){
+        switch (this.Type){
+            case 1:
+                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                break;
+            case 2:
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
+                processProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
+                break;
+            case 3:
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                break;
+        }
     }
 }

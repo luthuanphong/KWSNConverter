@@ -16,6 +16,33 @@ public class BroastcastLink {
     public List<String> To;
     public List<String> Program;
 
+    private Variable Buffer;
+    private Variable SendingRate;
+    private List<Program> programList;
+    private Program receiveProgram;
+    private Program sendProgram;
+
+    public List<Program> getPrograms(){
+        if(programList == null){
+            this.programList = new ArrayList<>();
+        }
+        return this.programList;
+    }
+
+    public Variable getBuffer(){
+        if(this.Buffer == null){
+            this.Buffer = new Variable(BasicType.INT,"Buffer_"+this.id,"0");
+        }
+        return this.Buffer;
+    }
+
+    public Variable getSendingRate(){
+        if(this.SendingRate == null){
+            this.SendingRate = new Variable(BasicType.INT,"SendingRate_"+this.id,this.MaxSendingRate+"");
+        }
+        return this.SendingRate;
+    }
+
     public BroastcastLink(Link link,int index){
         this.To = new ArrayList<>();
         this.Program = new ArrayList<>();
@@ -85,11 +112,21 @@ public class BroastcastLink {
             program.append(this.Program.get(i));
         }
 
-        variables.add(new Variable(BasicType.INT,"SendingRate_"+this.id,this.MaxSendingRate+""));
-        variables.add(new Variable(BasicType.INT,"Buffer_"+this.id,"0"));
+        variables.add(getSendingRate());
+        variables.add(getBuffer());
 
-        programs.add(new Program(receive.id,program.toString()));
-        programs.add(new Program(send.id,""));
+        receiveProgram = new Program(receive.id,program.toString());
+        sendProgram = new Program(send.id,"");
 
+        getPrograms().add(receiveProgram);
+        getPrograms().add(sendProgram);
+
+        programs.add(receiveProgram);
+        programs.add(sendProgram);
+
+    }
+    public void generateCode(Variable SensorSendingRate){
+        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),SensorSendingRate);
+        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(),getSendingRate());
     }
 }

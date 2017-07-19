@@ -64,6 +64,10 @@ public class Variable {
         return this.Value;
     }
 
+    public String getName(){
+        return this.Name;
+    }
+
     public Variable(BasicType Type,String Name , String Value){
         this.Type = Type;
         this.Name = Name;

@@ -1,6 +1,7 @@
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by FredLu on 02/07/2017.
@@ -64,8 +65,16 @@ public class KwsnConverter {
             if(chanelMode == UNICAST){
                 for (Link link : process.links.listLinks) {
                     link.convertToPnml(pnml, InputPlaces, OutputPlaces , programs,variables);
+                    Sensor from = findSensor(process.sensors.listSensor,link.From);
+                    link.generateCode(from.getSendingRate());
                 }
+                for (Sensor sensor : process.sensors.listSensor) {
+                    Link link = findLink(process.links.listLinks,sensor.Name);
+                    sensor.generateCode(link);
+                }
+
             }else if(chanelMode == BROADCAST){
+                List<BroastcastLink> links = new ArrayList<>();
                 for(int i = 0 ;i < process.links.listLinks.size();i++){
                     BroastcastLink link = new BroastcastLink(process.links.listLinks.get(i),i);
                     for(int j = 0 ; j < process.links.listLinks.size();j++){
@@ -75,7 +84,14 @@ public class KwsnConverter {
                             process.links.listLinks.remove(j);
                         }
                     }
+                    Sensor from = findSensor(process.sensors.listSensor,link.From);
                     link.convertToPnml(pnml,InputPlaces,OutputPlaces,programs,variables);
+                    link.generateCode(from.getSendingRate());
+                    links.add(link);
+                }
+                for(Sensor sensor : process.sensors.listSensor ){
+                    BroastcastLink link = findBroastCastLink(links,sensor.Name);
+                    sensor.generateCode(link);
                 }
             }
         }
@@ -103,5 +119,32 @@ public class KwsnConverter {
         }
     }
 
+    private Sensor findSensor(List<Sensor> sensors, String Name){
+        for(Sensor sensor : sensors){
+            if(sensor.Name.equals(Name)){
+                return sensor;
+            }
+        }
+        return null;
+    }
 
+    private Link findLink(List<Link> links,String sensorName){
+        for(Link link : links){
+            if(link.To.equals(sensorName)){
+                return link;
+            }
+        }
+        return null;
+    }
+
+    private BroastcastLink findBroastCastLink(List<BroastcastLink> links, String sensorName){
+        for(BroastcastLink link : links){
+            for(String To : link.To){
+                if(To.equals(sensorName)){
+                    return link;
+                }
+            }
+        }
+        return null;
+    }
 }
