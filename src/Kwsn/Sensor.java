@@ -27,6 +27,7 @@ public class Sensor {
     private Variable Queue;
     private Variable ProcessRate;
     private Variable SendingRate;
+    private Variable Energy;
     private List<Program> programList;
 
     private Program generateProgram;
@@ -93,6 +94,7 @@ public class Sensor {
         variables.add(getSendingRate());
         variables.add(getBuffer());
         variables.add(getQueue());
+        variables.add(getEnergy());
     }
 
     private void convertSourceNode(
@@ -354,5 +356,17 @@ public class Sensor {
                 sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
                 break;
         }
+    }
+
+    public Variable getEnergy() {
+        return Energy;
+    }
+
+    public void setEnergy(String energy) {
+       if(this.Energy == null){
+           this.Energy = new Variable(BasicType.INT,"Energy"+this.Id,energy);
+       }else{
+           this.Energy.setValue(energy);
+       }
     }
 }

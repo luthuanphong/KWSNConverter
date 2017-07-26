@@ -47,7 +47,7 @@ public class KwsnConverter {
      * convert kwsn file to pnml
      * @param path
      */
-    public Pnml convert(String path,int chanelMode) throws JAXBException {
+    public Pnml convert(String path,HashMap<String,String> Energies,int chanelMode) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(WSN.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         WSN wsn = (WSN) unmarshaller.unmarshal(new File(path));
@@ -56,9 +56,11 @@ public class KwsnConverter {
         variables.add(new Variable(BasicType.INT,Constants.SENSOR_MAX_BUFFER_SZIE,wsn.Network.SensorMaxBufferSize));
         variables.add(new Variable(BasicType.INT,Constants.SENSOR_MAX_QUEUE_SIZE,wsn.Network.SensorMaxQueueSize));
         variables.add(new Variable(BasicType.INT,Constants.CHANEL_MAX_BUFFER_SIZE,wsn.Network.ChannelMaxBufferSize));
+        variables.add(new Variable(BasicType.BOOL,Constants.CONGESTION,"false"));
         for(Kwsn.Process process : wsn.Network.processes) {
             ////Convert Sensor
             for (Sensor sensor : process.sensors.listSensor) {
+                sensor.setEnergy(Energies.getOrDefault(sensor.Id,"50"));
                 sensor.convertToPnml(pnml, InputPlaces, OutputPlaces , programs,variables);
             }
             ////Convert chanel
@@ -99,13 +101,13 @@ public class KwsnConverter {
         return pnml;
     }
 
-    public void SaveConvertFile(String sourcePath, String folderPath,int chanelMode){
+    public void SaveConvertFile(String sourcePath, String folderPath,HashMap<String,String> Energies,int chanelMode){
 
         try {
             File file = new File(sourcePath);
             String sourceFileName = file.getName().split("\\.")[0];
 
-            Pnml pnml = convert(sourcePath,chanelMode);
+            Pnml pnml = convert(sourcePath,Energies,chanelMode);
             JAXBContext context = JAXBContext.newInstance(Pnml.class);
             Marshaller marshaller = context.createMarshaller();
             //Save normal file

@@ -5,10 +5,19 @@ import Kwsn.WSN;
 
 import javax.xml.bind.*;
 import java.io.File;
+import java.util.HashMap;
+
 import Pnml.*;
 public class main {
 
     public static void main(String []args) throws JAXBException {
+
+        HashMap<String,String> SensorEnergy = new HashMap<>();
+        SensorEnergy.put("1","100");
+        SensorEnergy.put("2","80");
+        SensorEnergy.put("3","70");
+        SensorEnergy.put("4","67");
+        SensorEnergy.put("5","78");
 
         JAXBContext context = JAXBContext.newInstance(Pnml.class);
         //Unmarshaller unmarshaller = context.createUnmarshaller();
@@ -16,7 +25,7 @@ public class main {
 
         KwsnConverter converter = new KwsnConverter();
         converter.SaveConvertFile("/home/fredlu/Downloads/5-sensors.kwsn",
-                "/home/fredlu/Downloads/",KwsnConverter.BROADCAST);
+                "/home/fredlu/Downloads/",SensorEnergy,KwsnConverter.BROADCAST);
 
     }
 }

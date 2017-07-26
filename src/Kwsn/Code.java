@@ -24,6 +24,11 @@ public class Code {
         code.append("}");
         code.append(System.lineSeparator());
         code.append(queue.getName()).append("=").append(queue.getName()).append("+").append("1/").append(processingRate.getName()).append(";");
+        code.append(System.lineSeparator());
+        code.append("if(").append(queue.getName()).append(" > ").append(Constants.SENSOR_MAX_QUEUE_SIZE).append(")").append(System.lineSeparator());
+        code.append("{").append(System.lineSeparator()).append(Constants.CONGESTION).append(" = ").append("true");
+        code.append(System.lineSeparator());
+        code.append("}");
         return code.toString();
     }
 
@@ -43,6 +48,11 @@ public class Code {
                         .append("=")
                         .append(Buffer.getName()).append("+").append("1/").append(sendingRate.getName()).append(";");
                 code.append(System.lineSeparator());
+                code.append("if(").append(Buffer.getName()).append(" > ").append(Constants.CHANEL_MAX_BUFFER_SIZE).append(")").append(System.lineSeparator());
+                code.append("{").append(System.lineSeparator());
+                code.append(Constants.CONGESTION).append(" = ").append("true");
+                code.append(System.lineSeparator());
+                code.append("}");
                 return code.toString();
     }
 
@@ -72,6 +82,10 @@ public class Code {
         code.append(buffer.getName())
                 .append("=").append(buffer.getName()).append("+").append("1/").append(tranmition.getName()).append(";");
         code.append(System.lineSeparator());
+        code.append("if(").append(buffer.getName()).append(" > ").append(Constants.SENSOR_MAX_BUFFER_SZIE).append(")");
+        code.append("{").append(System.lineSeparator());
+        code.append(Constants.CONGESTION).append(" = ").append("true");
+        code.append("}");
         return code.toString();
     }
 }
