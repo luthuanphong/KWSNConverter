@@ -109,7 +109,7 @@ public class KwsnConverter {
                 }
             }
         }
-        programs.add(new Program("main",""));
+        programs.add(new Program("main","search("+Constants.CONGESTION+")"));
         return pnml;
     }
 
