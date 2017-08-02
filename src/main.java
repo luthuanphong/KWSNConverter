@@ -19,13 +19,17 @@ public class main {
         SensorEnergy.put("4","67");
         SensorEnergy.put("5","78");
 
+        HashMap<String,String> energyRule = new HashMap<>();
+        energyRule.put("process","5");
+        energyRule.put("send","2");
+
         JAXBContext context = JAXBContext.newInstance(Pnml.class);
         //Unmarshaller unmarshaller = context.createUnmarshaller();
         //WSN wsn = (WSN) unmarshaller.unmarshal(new File("C:\\Data\\luanvan\\GraduationThesis\\5-sensors.kwsn"));
 
         KwsnConverter converter = new KwsnConverter();
         converter.SaveConvertFile("/home/fredlu/Downloads/5-sensors.kwsn",
-                "/home/fredlu/Downloads/",SensorEnergy,KwsnConverter.BROADCAST);
+                "/home/fredlu/Downloads/",SensorEnergy,energyRule,"1","1","1",KwsnConverter.BROADCAST);
 
     }
 }

@@ -10,6 +10,8 @@ import java.util.List;
 
 @XmlRootElement(name = "Sensor")
 public class Sensor {
+    public String MinSendingRate;
+    public String MinProcessingRate;
     @XmlAttribute(name = "MaxSendingRate")
     public String MaxSendingRate;
     @XmlAttribute(name = "MaxProcessingRate")
@@ -23,10 +25,14 @@ public class Sensor {
     @XmlAttribute(name = "SType")
     public int Type;
 
+    public HashMap<String,String> energyRule = null;
+
     private Variable Buffer;
     private Variable Queue;
-    private Variable ProcessRate;
-    private Variable SendingRate;
+    private Variable MinSendingRateVar;
+    private Variable MinProcessingRateVar;
+    private Variable MaxProcessRateVar;
+    private Variable MaxSendingRateVar;
     private Variable Energy;
     private List<Program> programList;
 
@@ -34,6 +40,10 @@ public class Sensor {
     private Program sendProgram;
     private Program receiveProgram;
     private Program processProgram;
+
+    public void setEnergyRule(HashMap<String,String> rules){
+        this.energyRule = rules;
+    }
 
     public List<Program> getPrograms(){
         if(programList == null){
@@ -45,31 +55,46 @@ public class Sensor {
 
     public Variable getBuffer(){
         if(this.Buffer == null){
-            this.Buffer = new Variable(BasicType.INT,"Buffer_"+this.Id,"0");
+            this.Buffer = new Variable(BasicType.FLOAT,"Buffer_"+this.Id,"0");
         }
         return Buffer;
     }
 
     public Variable getQueue(){
         if(this.Queue == null){
-            this.Queue = new Variable(BasicType.INT,"Queue_"+this.Id,"0");
+            this.Queue = new Variable(BasicType.FLOAT,"Queue_"+this.Id,"0");
         }
         return Queue;
     }
 
-    public Variable getProcessRate(){
-        if(this.ProcessRate == null){
-            this.ProcessRate = new Variable(BasicType.INT,"ProcessRate_"+this.Id,this.MaxProcessingRate);
+    public Variable getMaxProcessRateVar(){
+        if(this.MaxProcessRateVar == null){
+            this.MaxProcessRateVar = new Variable(BasicType.INT,"MaxProcessRate_"+this.Id,this.MaxProcessingRate);
         }
-        return this.ProcessRate;
+        return this.MaxProcessRateVar;
     }
 
-    public Variable getSendingRate(){
-        if(this.SendingRate == null){
-            this.SendingRate = new Variable(BasicType.INT,"SendingRate_"+this.Id,this.MaxSendingRate);
+    public Variable getMaxSendingRateVar(){
+        if(this.MaxSendingRateVar == null){
+            this.MaxSendingRateVar = new Variable(BasicType.INT,"MaxSendingRate_"+this.Id,this.MaxSendingRate);
         }
-        return this.SendingRate;
+        return this.MaxSendingRateVar;
     }
+
+    public Variable getMinSendingRateVar(){
+        if(this.MinSendingRateVar == null){
+            this.MinSendingRateVar = new Variable(BasicType.INT,"MinSendingRate_"+this.Id,this.MinSendingRate);
+        }
+        return this.MinSendingRateVar;
+    }
+
+    public Variable getMinProcessingRateVar(){
+        if(this.MinProcessingRateVar == null){
+            this.MinProcessingRateVar = new Variable(BasicType.INT,"MinProcessingRate_"+this.Id,this.MinProcessingRate);
+        }
+        return this.MinProcessingRateVar;
+    }
+
     /**
      * Convert sensor to pnml structure
      * @param pnml pnml object used to store convert data
@@ -90,8 +115,10 @@ public class Sensor {
                 convertIntermediateNode(pnml,InputPlaces,OutputPlace,programs,variables);
                 break;
         }
-        variables.add(getProcessRate());
-        variables.add(getSendingRate());
+        variables.add(getMaxProcessRateVar());
+        variables.add(getMaxSendingRateVar());
+        variables.add(getMinProcessingRateVar());
+        variables.add(getMinSendingRateVar());
         variables.add(getBuffer());
         variables.add(getQueue());
         variables.add(getEnergy());
@@ -101,27 +128,27 @@ public class Sensor {
             Pnml pnml, HashMap<String,String> InputPlaces,
             HashMap<String,String> OutputPlace , ArrayList<Program> programs, ArrayList<Variable> variables){
         Place inputPlace = new Place();
-        inputPlace.id = "In"+this.Id;
+        inputPlace.id = "Src_"+"In_"+this.Id;
         if(Init.equals("True")){
             //if sensor init is true set tolen to input place
             inputPlace.token = 1;
         }
-        inputPlace.label = "Input "+this.Name;
+        inputPlace.label = "Src "+"Input "+this.Name;
         //Add input place id to map
         InputPlaces.put(this.Name,inputPlace.id);
 
         Place intermediatePlace = new Place();
-        intermediatePlace.id = "Intermediate"+this.Id;
-        intermediatePlace.label = "Intermediate"+this.Name;
+        intermediatePlace.id = "Src_"+"Int_"+this.Id;
+        intermediatePlace.label = "Src "+"Intermediate "+this.Name;
 
         Place outPlace = new Place();
-        outPlace.id = "Out"+this.Id;
-        outPlace.label = "Output " + this.Name;
+        outPlace.id = "Src_"+"Out_"+this.Id;
+        outPlace.label = "Src "+"Output " + this.Name;
         //Add output place id to map
         OutputPlace.put(this.Name,outPlace.id);
 
         Transition generate = new Transition();
-        generate.id = "generate"+this.Id;
+        generate.id = "Src"+"generate"+this.Id;
         generate.label = "generate "+this.Name;
 
         Transition send = new Transition();
@@ -167,9 +194,9 @@ public class Sensor {
         pnml.net.arcs.add(afterSend);
 
         generateProgram =
-                new Program(generate.id,Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate()));
+                new Program(generate.id,Code.CreateSensorProcessingCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule));
         sendProgram =
-                new Program(send.id,Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate()));
+                new Program(send.id,Code.CreateSensorToChanelSensorPart(getQueue(), getMaxSendingRateVar(),getMinSendingRateVar(),getEnergy(),this.energyRule));
 
         getPrograms().add(generateProgram);
         getPrograms().add(sendProgram);
@@ -180,18 +207,18 @@ public class Sensor {
             Pnml pnml, HashMap<String,String> InputPlaces,
             HashMap<String,String> OutputPlace , ArrayList<Program> programs, ArrayList<Variable> variables){
         Place inputPlace = new Place();
-        inputPlace.id = "In"+this.Id;
-        inputPlace.label = "Input "+this.Name;
+        inputPlace.id = "SiK_"+"In_"+this.Id;
+        inputPlace.label = "Sik " + "Input "+this.Name;
         //Add input place id to map
         InputPlaces.put(this.Name,inputPlace.id);
 
         Place intermediatePlace = new Place();
-        intermediatePlace.id = "Intermediate"+this.Id;
-        intermediatePlace.label = "Intermediate"+this.Name;
+        intermediatePlace.id = "Sik_"+"Int_"+this.Id;
+        intermediatePlace.label = "Sik " + "Intermediate "+this.Name;
 
         Place outPlace = new Place();
-        outPlace.id = "Out"+this.Id;
-        outPlace.label = "Output " + this.Name;
+        outPlace.id = "Sik_"+"Out_"+this.Id;
+        outPlace.label = "Sik " + "Output " + this.Name;
         //Add output place id to map
         OutputPlace.put(this.Name,outPlace.id);
 
@@ -253,18 +280,18 @@ public class Sensor {
             Pnml pnml, HashMap<String,String> InputPlaces,
             HashMap<String,String> OutputPlace , ArrayList<Program> programs, ArrayList<Variable> variables){
         Place inputPlace = new Place();
-        inputPlace.id = "In"+this.Id;
-        inputPlace.label = "Input "+this.Name;
+        inputPlace.id = "Int_"+"In_"+this.Id;
+        inputPlace.label = "Intermediate "+"Input "+this.Name;
         //Add input place id to map
         InputPlaces.put(this.Name,inputPlace.id);
 
         Place intermediatePlace = new Place();
-        intermediatePlace.id = "Intermediate"+this.Id;
-        intermediatePlace.label = "Intermediate"+this.Name;
+        intermediatePlace.id = "Int_"+"Int_"+this.Id;
+        intermediatePlace.label = "Int "+"Intermediate "+this.Name;
 
         Place outPlace = new Place();
-        outPlace.id = "Out"+this.Id;
-        outPlace.label = "Output " + this.Name;
+        outPlace.id = "Int_"+"Out_"+this.Id;
+        outPlace.label = "Int "+"Output " + this.Name;
         //Add output place id to map
         OutputPlace.put(this.Name,outPlace.id);
 
@@ -327,16 +354,16 @@ public class Sensor {
     public void generateCode(Link link){
         switch (this.Type){
             case 1:
-                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
-                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule);
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(), getMaxSendingRateVar(),getMinSendingRateVar(),getEnergy(),this.energyRule);
                 break;
             case 2:
-                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
-                processProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getMaxSendingRateVar(),link.getMinSendingRateVar());
+                processProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule);
                 break;
             case 3:
-                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
-                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getMaxSendingRateVar(),link.getMinSendingRateVar());
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(), getMaxSendingRateVar(),getMinSendingRateVar(),getEnergy(),this.energyRule);
                 break;
         }
     }
@@ -344,16 +371,16 @@ public class Sensor {
     public void generateCode(BroastcastLink link){
         switch (this.Type){
             case 1:
-                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
-                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule);
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(), getMaxSendingRateVar(),getMinSendingRateVar(),getEnergy(),this.energyRule);
                 break;
             case 2:
-                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
-                processProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(),getProcessRate());
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getMaxSendingRateVar(),link.getMinSendingRateVar());
+                processProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule);
                 break;
             case 3:
-                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getSendingRate());
-                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(),getSendingRate());
+                receiveProgram.Code = Code.CreateChanelToSensorSensorPart(getBuffer(),link.getMaxSendingRateVar(),link.getMinSendingRateVar());
+                sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(), getMaxSendingRateVar(),getMinSendingRateVar(),getEnergy(),this.energyRule);
                 break;
         }
     }

@@ -5,7 +5,6 @@ import Pnml.*;
 
 import javax.xml.bind.annotation.*;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,6 +14,8 @@ public class Link{
     public String id;
     @XmlAttribute(name = "MaxSendingRate")
     public String MaxSendingRate;
+    @XmlAttribute(name = "MinSendingRate")
+    public String MinSendingRate;
     @XmlElement(name = "From")
     public String From;
     @XmlElement(name = "To")
@@ -23,7 +24,8 @@ public class Link{
     public String Program;
 
     private Variable Buffer;
-    private Variable SendingRate;
+    private Variable MinSendingRateVar;
+    private Variable MaxSendingRateVar;
     private List<Program> programList;
     private Program sendProgram;
     private Program receiveProgram;
@@ -37,16 +39,23 @@ public class Link{
 
     public Variable getBuffer(){
         if(this.Buffer == null){
-            this.Buffer = new Variable(BasicType.INT,"Buffer_"+this.id,"0");
+            this.Buffer = new Variable(BasicType.FLOAT,"Buffer_"+this.id,"0");
         }
         return this.Buffer;
     }
 
-    public Variable getSendingRate(){
-        if(this.SendingRate == null){
-            this.SendingRate = new Variable(BasicType.INT,"SendingRate_"+this.id,this.MaxSendingRate);
+    public Variable getMaxSendingRateVar(){
+        if(this.MaxSendingRateVar == null){
+            this.MaxSendingRateVar = new Variable(BasicType.INT,"MaxSendingRate_"+this.id,this.MaxSendingRate);
         }
-        return this.SendingRate;
+        return this.MaxSendingRateVar;
+    }
+
+    public Variable getMinSendingRateVar(){
+        if(this.MinSendingRateVar == null){
+            this.MinSendingRateVar = new Variable(BasicType.INT,"MinSendingRate_"+this.id,this.MinSendingRate);
+        }
+        return this.MinSendingRateVar;
     }
 
     /**
@@ -109,7 +118,8 @@ public class Link{
         pnml.net.arcs.add(beforeSend);
         pnml.net.arcs.add(afterSend);
 
-        variables.add(getSendingRate());
+        variables.add(getMaxSendingRateVar());
+        variables.add(getMinSendingRateVar());
         variables.add(getBuffer());
 
         receiveProgram = new Program(receive.id,this.Program);
@@ -122,8 +132,8 @@ public class Link{
         programs.add(sendProgram);
     }
 
-    public void generateCode(Variable SensorSendingRate){
-        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),SensorSendingRate);
-        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(),getSendingRate());
+    public void generateCode(Sensor sensor){
+        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),sensor.getMaxSendingRateVar(),sensor.getMinSendingRateVar());
+        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(), getMaxSendingRateVar(),getMinSendingRateVar());
     }
 }

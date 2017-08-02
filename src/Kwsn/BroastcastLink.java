@@ -11,13 +11,15 @@ import java.util.List;
  */
 public class BroastcastLink {
     public String id;
-    public int MaxSendingRate;
+    public String MaxSendingRate;
+    public String MinSendingRate;
     public String From;
     public List<String> To;
     public List<String> Program;
 
     private Variable Buffer;
-    private Variable SendingRate;
+    private Variable MaxSendingRateVar;
+    private Variable MinSendingRateVar;
     private List<Program> programList;
     private Program receiveProgram;
     private Program sendProgram;
@@ -31,23 +33,31 @@ public class BroastcastLink {
 
     public Variable getBuffer(){
         if(this.Buffer == null){
-            this.Buffer = new Variable(BasicType.INT,"Buffer_"+this.id,"0");
+            this.Buffer = new Variable(BasicType.FLOAT,"Buffer_"+this.id,"0");
         }
         return this.Buffer;
     }
 
-    public Variable getSendingRate(){
-        if(this.SendingRate == null){
-            this.SendingRate = new Variable(BasicType.INT,"SendingRate_"+this.id,this.MaxSendingRate+"");
+    public Variable getMaxSendingRateVar(){
+        if(this.MaxSendingRateVar == null){
+            this.MaxSendingRateVar = new Variable(BasicType.INT,"MaxSendingRate_"+this.id,this.MaxSendingRate);
         }
-        return this.SendingRate;
+        return this.MaxSendingRateVar;
+    }
+
+    public Variable getMinSendingRateVar(){
+        if(this.MinSendingRateVar == null){
+            this.MinSendingRateVar = new Variable(BasicType.INT,"MinSendingRate_"+this.id,this.MinSendingRate);
+        }
+        return this.MinSendingRateVar;
     }
 
     public BroastcastLink(Link link,int index){
         this.To = new ArrayList<>();
         this.Program = new ArrayList<>();
         this.id = "link"+(index+1);
-        this.MaxSendingRate = Integer.parseInt(link.MaxSendingRate);
+        this.MaxSendingRate = link.MaxSendingRate;
+        this.MinSendingRate = link.MinSendingRate;
         this.From = link.From;
         this.To.add(link.To);
         this.Program.add(link.Program);
@@ -112,7 +122,7 @@ public class BroastcastLink {
             program.append(this.Program.get(i));
         }
 
-        variables.add(getSendingRate());
+        variables.add(getMaxSendingRateVar());
         variables.add(getBuffer());
 
         receiveProgram = new Program(receive.id,program.toString());
@@ -125,8 +135,8 @@ public class BroastcastLink {
         programs.add(sendProgram);
 
     }
-    public void generateCode(Variable SensorSendingRate){
-        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),SensorSendingRate);
-        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(),getSendingRate());
+    public void generateCode(Sensor sensor){
+        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),sensor.getMaxSendingRateVar(),sensor.getMinSendingRateVar());
+        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(), getMaxSendingRateVar(),getMinSendingRateVar());
     }
 }

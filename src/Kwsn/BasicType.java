@@ -6,5 +6,6 @@ package Kwsn;
 public enum BasicType {
     INT,
     STRING,
-    BOOL
+    BOOL,
+    FLOAT
 }

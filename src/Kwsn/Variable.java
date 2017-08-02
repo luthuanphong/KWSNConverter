@@ -17,6 +17,10 @@ public class Variable {
      * Datatype that used write in txrt file
      */
     private static final String BOOL_TYPE = "bool";
+    /**
+     * Datatype that used write in txrt file
+     */
+    private static final String FLOAT_TYPE = "float";
 
     /**
      * Type of variable
@@ -85,6 +89,9 @@ public class Variable {
                 break;
             case STRING:
                 variableString.append(Variable.STRING_TYPE);
+                break;
+            case FLOAT:
+                variableString.append(Variable.FLOAT_TYPE);
                 break;
         }
         variableString.append(" ");

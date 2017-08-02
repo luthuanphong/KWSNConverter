@@ -47,7 +47,14 @@ public class KwsnConverter {
      * convert kwsn file to pnml
      * @param path
      */
-    public Pnml convert(String path,HashMap<String,String> Energies,int chanelMode) throws JAXBException {
+    public Pnml convert(
+            String path,
+            HashMap<String,String> Energies,
+            HashMap<String,String> EnergiesRule,
+            String sensorMinsendingRate,
+            String sensorMinprocessingRate,
+            String chanelMinsendingRate,
+            int chanelMode) throws JAXBException {
         JAXBContext context = JAXBContext.newInstance(WSN.class);
         Unmarshaller unmarshaller = context.createUnmarshaller();
         WSN wsn = (WSN) unmarshaller.unmarshal(new File(path));
@@ -61,14 +68,18 @@ public class KwsnConverter {
             ////Convert Sensor
             for (Sensor sensor : process.sensors.listSensor) {
                 sensor.setEnergy(Energies.getOrDefault(sensor.Id,"50"));
+                sensor.setEnergyRule(EnergiesRule);
+                sensor.MinSendingRate = sensorMinsendingRate;
+                sensor.MinProcessingRate = sensorMinprocessingRate;
                 sensor.convertToPnml(pnml, InputPlaces, OutputPlaces , programs,variables);
             }
             ////Convert chanel
             if(chanelMode == UNICAST){
                 for (Link link : process.links.listLinks) {
+                    link.MinSendingRate = chanelMinsendingRate;
                     link.convertToPnml(pnml, InputPlaces, OutputPlaces , programs,variables);
                     Sensor from = findSensor(process.sensors.listSensor,link.From);
-                    link.generateCode(from.getSendingRate());
+                    link.generateCode(from);
                 }
                 for (Sensor sensor : process.sensors.listSensor) {
                     Link link = findLink(process.links.listLinks,sensor.Name);
@@ -78,6 +89,7 @@ public class KwsnConverter {
             }else if(chanelMode == BROADCAST){
                 List<BroastcastLink> links = new ArrayList<>();
                 for(int i = 0 ;i < process.links.listLinks.size();i++){
+                    process.links.listLinks.get(i).MinSendingRate = chanelMinsendingRate;
                     BroastcastLink link = new BroastcastLink(process.links.listLinks.get(i),i);
                     for(int j = 0 ; j < process.links.listLinks.size();j++){
                         if(i != j && link.From.equals(process.links.listLinks.get(j).From)){
@@ -88,7 +100,7 @@ public class KwsnConverter {
                     }
                     Sensor from = findSensor(process.sensors.listSensor,link.From);
                     link.convertToPnml(pnml,InputPlaces,OutputPlaces,programs,variables);
-                    link.generateCode(from.getSendingRate());
+                    link.generateCode(from);
                     links.add(link);
                 }
                 for(Sensor sensor : process.sensors.listSensor ){
@@ -101,13 +113,21 @@ public class KwsnConverter {
         return pnml;
     }
 
-    public void SaveConvertFile(String sourcePath, String folderPath,HashMap<String,String> Energies,int chanelMode){
+    public void SaveConvertFile(
+            String sourcePath,
+            String folderPath,
+            HashMap<String,String> Energies,
+            HashMap<String,String> EnergiesRule,
+            String sensorMinsendingRate,
+            String sensorMinprocessingRate,
+            String chanelMinsendingRate,
+            int chanelMode){
 
         try {
             File file = new File(sourcePath);
             String sourceFileName = file.getName().split("\\.")[0];
 
-            Pnml pnml = convert(sourcePath,Energies,chanelMode);
+            Pnml pnml = convert(sourcePath,Energies,EnergiesRule,sensorMinsendingRate,sensorMinprocessingRate,chanelMinsendingRate,chanelMode);
             JAXBContext context = JAXBContext.newInstance(Pnml.class);
             Marshaller marshaller = context.createMarshaller();
             //Save normal file
