@@ -64,6 +64,7 @@ public class KwsnConverter {
         variables.add(new Variable(BasicType.INT,Constants.SENSOR_MAX_QUEUE_SIZE,wsn.Network.SensorMaxQueueSize));
         variables.add(new Variable(BasicType.INT,Constants.CHANEL_MAX_BUFFER_SIZE,wsn.Network.ChannelMaxBufferSize));
         variables.add(new Variable(BasicType.BOOL,Constants.CONGESTION,"false"));
+        variables.add(new Variable(BasicType.INT,Constants.NUMBER_OF_PACKAGES,wsn.Network.NumberOfPacket));
         for(Kwsn.Process process : wsn.Network.processes) {
             ////Convert Sensor
             for (Sensor sensor : process.sensors.listSensor) {

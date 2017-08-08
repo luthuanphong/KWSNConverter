@@ -7,14 +7,16 @@ import java.util.HashMap;
  */
 public class Code {
 
-    public static String CreateSensorProcessingCode(
+    public static String CreateSensorGenerateCode(
             Variable buffer, Variable queue, Variable MaxprocessingRate , Variable MinProcessingRate , Variable energy , HashMap<String,String> energyRule){
+
         StringBuilder code = new StringBuilder();
+        code.append(Constants.NUMBER_OF_PACKAGES).append("=").append(Constants.NUMBER_OF_PACKAGES).append(" - ").append("randomInt(").append("1").append(",").append(Constants.NUMBER_OF_PACKAGES).append(")").append(";");
         code.append("float ").append("temp").append("=").append(buffer.getName()).append(" - ").append("1/").append("randomInt").append("(").append(MinProcessingRate.getName()).append(",").append(MaxprocessingRate.getName()).append(")").append(";");
         code.append("if(").append("0").append("<").append("temp").append(")");
         code.append("{");
         code.append(System.lineSeparator());
-        code.append(buffer.getName()).append("=").append("temp");
+        code.append(buffer.getName()).append("=").append("temp").append(";");
         code.append(System.lineSeparator());
         code.append("}");
         code.append(System.lineSeparator());
@@ -26,10 +28,40 @@ public class Code {
         code.append(System.lineSeparator());
         code.append("}");
         code.append(System.lineSeparator());
-        code.append(queue.getName()).append("=").append(queue.getName()).append("+").append("1/").append(MaxprocessingRate.getName()).append(";");
+        code.append(queue.getName()).append("=").append(queue.getName()).append("+").append("temp").append(";");
         code.append(System.lineSeparator());
         code.append("if(").append(queue.getName()).append(" > ").append(Constants.SENSOR_MAX_QUEUE_SIZE).append(")").append(System.lineSeparator());
-        code.append("{").append(System.lineSeparator()).append(Constants.CONGESTION).append(" = ").append("true");
+        code.append("{").append(System.lineSeparator()).append(Constants.CONGESTION).append(" = ").append("true").append(";");
+        code.append(System.lineSeparator());
+        code.append("}");
+        code.append(System.lineSeparator());
+        code.append(energy.getName()).append(" = ").append(energy.getName()).append(" - ").append(energyRule.getOrDefault("process","1")).append(";");
+        return code.toString();
+    }
+
+    public static String CreateSensorProcessingCode(
+            Variable buffer, Variable queue, Variable MaxprocessingRate , Variable MinProcessingRate , Variable energy , HashMap<String,String> energyRule){
+        StringBuilder code = new StringBuilder();
+        code.append("float ").append("temp").append("=").append(buffer.getName()).append(" - ").append("1/").append("randomInt").append("(").append(MinProcessingRate.getName()).append(",").append(MaxprocessingRate.getName()).append(")").append(";");
+        code.append("if(").append("0").append("<").append("temp").append(")");
+        code.append("{");
+        code.append(System.lineSeparator());
+        code.append(buffer.getName()).append("=").append("temp").append(";");
+        code.append(System.lineSeparator());
+        code.append("}");
+        code.append(System.lineSeparator());
+        code.append("else");
+        code.append(System.lineSeparator());
+        code.append("{");
+        code.append(System.lineSeparator());
+        code.append(buffer.getName()).append("=").append("0").append(";");
+        code.append(System.lineSeparator());
+        code.append("}");
+        code.append(System.lineSeparator());
+        code.append(queue.getName()).append("=").append(queue.getName()).append("+").append("temp").append(";");
+        code.append(System.lineSeparator());
+        code.append("if(").append(queue.getName()).append(" > ").append(Constants.SENSOR_MAX_QUEUE_SIZE).append(")").append(System.lineSeparator());
+        code.append("{").append(System.lineSeparator()).append(Constants.CONGESTION).append(" = ").append("true").append(";");
         code.append(System.lineSeparator());
         code.append("}");
         code.append(System.lineSeparator());
@@ -56,7 +88,7 @@ public class Code {
                 code.append(System.lineSeparator());
                 code.append("if(").append(Buffer.getName()).append(" > ").append(Constants.CHANEL_MAX_BUFFER_SIZE).append(")").append(System.lineSeparator());
                 code.append("{").append(System.lineSeparator());
-                code.append(Constants.CONGESTION).append(" = ").append("true");
+                code.append(Constants.CONGESTION).append(" = ").append("true").append(";");
                 code.append(System.lineSeparator());
                 code.append("}");
                 return code.toString();
@@ -91,7 +123,7 @@ public class Code {
         code.append(System.lineSeparator());
         code.append("if(").append(buffer.getName()).append(" > ").append(Constants.SENSOR_MAX_BUFFER_SZIE).append(")");
         code.append("{").append(System.lineSeparator());
-        code.append(Constants.CONGESTION).append(" = ").append("true");
+        code.append(Constants.CONGESTION).append(" = ").append("true").append(";");
         code.append("}");
         return code.toString();
     }

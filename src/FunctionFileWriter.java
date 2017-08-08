@@ -1,3 +1,4 @@
+import Kwsn.BasicType;
 import Kwsn.Declaration;
 import Kwsn.Program;
 import Kwsn.Variable;
@@ -18,7 +19,11 @@ public class FunctionFileWriter {
                     if(variable.getValue().equals("0")) {
                         writer.write(variable.toString());
                     }else{
-                        writer.write(variable.setValue("1").toString());
+                        if(variable.getType() == BasicType.FLOAT || variable.getType() == BasicType.INT) {
+                            writer.write(variable.setValue("1").toString());
+                        }else {
+                            writer.write(variable.toString());
+                        }
                     }
                     writer.write(System.lineSeparator());
                 }

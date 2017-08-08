@@ -148,11 +148,11 @@ public class Sensor {
         OutputPlace.put(this.Name,outPlace.id);
 
         Transition generate = new Transition();
-        generate.id = "Src"+"generate"+this.Id;
+        generate.id = "Src_"+"gen_"+this.Id;
         generate.label = "generate "+this.Name;
 
         Transition send = new Transition();
-        send.id = "send"+this.Id;
+        send.id = "send_"+this.Id;
         send.label = "send"+this.Name;
 
         Arc beforeGen = new Arc();
@@ -371,7 +371,7 @@ public class Sensor {
     public void generateCode(BroastcastLink link){
         switch (this.Type){
             case 1:
-                generateProgram.Code = Code.CreateSensorProcessingCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule);
+                generateProgram.Code = Code.CreateSensorGenerateCode(getBuffer(),getQueue(), getMaxProcessRateVar(),getMinProcessingRateVar(),getEnergy(),this.energyRule);
                 sendProgram.Code = Code.CreateSensorToChanelSensorPart(getQueue(), getMaxSendingRateVar(),getMinSendingRateVar(),getEnergy(),this.energyRule);
                 break;
             case 2:

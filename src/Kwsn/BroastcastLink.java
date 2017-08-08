@@ -21,8 +21,7 @@ public class BroastcastLink {
     private Variable MaxSendingRateVar;
     private Variable MinSendingRateVar;
     private List<Program> programList;
-    private Program receiveProgram;
-    private Program sendProgram;
+    private Program chanelProgram;
 
     public List<Program> getPrograms(){
         if(programList == null){
@@ -55,7 +54,7 @@ public class BroastcastLink {
     public BroastcastLink(Link link,int index){
         this.To = new ArrayList<>();
         this.Program = new ArrayList<>();
-        this.id = "link"+(index+1);
+        this.id = (index+1)+"";
         this.MaxSendingRate = link.MaxSendingRate;
         this.MinSendingRate = link.MinSendingRate;
         this.From = link.From;
@@ -66,56 +65,33 @@ public class BroastcastLink {
     public void convertToPnml(
             Pnml pnml, HashMap<String,String> InputPlaces,
             HashMap<String,String> OutputPlace, ArrayList<Program> programs,ArrayList<Variable> variables){
-        Place intermediate = new Place();
-        intermediate.id = "Intermediate"+this.id;
-        intermediate.label = "Intermediate "+this.id;
 
-        Transition receive = new Transition();
-        receive.id = "receive"+this.id;
-        receive.label = "receive "+this.id;
+        Transition chanel = new Transition();
+        chanel.id = "chanel_"+this.id;
 
-        Transition send = new Transition();
-        send.id = "send"+this.id;
-        send.label = "send "+this.id;
+        Arc inChanel = new Arc();
+        inChanel.id = "In_"+this.id;
+        inChanel.label = "Input "+this.id;
+        inChanel.weight = 1;
+        inChanel.place = OutputPlace.get(this.From);
+        inChanel.transition = chanel.id;
+        inChanel.direction = ArcDirection.PLACE_TO_TRANSITION;
 
-        Arc beforeReceive = new Arc();
-        beforeReceive.id = "beforeReceive"+this.id;
-        beforeReceive.weight = 1;
-        beforeReceive.direction = ArcDirection.PLACE_TO_TRANSITION;
-        beforeReceive.place = OutputPlace.get(this.From);
-        beforeReceive.transition = receive.id;
-
-        Arc afterReceive = new Arc();
-        afterReceive.id = "afterReceive"+this.id;
-        afterReceive.weight = 1;
-        afterReceive.direction = ArcDirection.TRANSITION_TO_PLACE;
-        afterReceive.place = intermediate.id;
-        afterReceive.transition = receive.id;
-
-        Arc beforeSend = new Arc();
-        beforeSend.id = "beforeSend"+this.id;
-        beforeSend.weight = 1;
-        beforeSend.direction = ArcDirection.PLACE_TO_TRANSITION;
-        beforeSend.place = intermediate.id;
-        beforeSend.transition = send.id;
+        pnml.net.transitions.add(chanel);
+        pnml.net.arcs.add(inChanel);
 
         for(int i = 0 ; i < this.To.size() ; i++){
-            Arc afterSend = new Arc();
-            afterSend.id = "afterSend"+this.id+i;
-            afterSend.weight = 1;
-            afterSend.direction = ArcDirection.TRANSITION_TO_PLACE;
-            afterSend.transition = send.id;
-            afterSend.place = InputPlaces.get(this.To.get(i));
 
-            pnml.net.arcs.add(afterSend);
+            Arc outChanel = new Arc();
+            outChanel.id = "Out_"+i;
+            outChanel.label = "Output "+i;
+            outChanel.weight = 1;
+            outChanel.transition = chanel.id;
+            outChanel.place = InputPlaces.get(this.To.get(i));
+            outChanel.direction = ArcDirection.TRANSITION_TO_PLACE;
+            pnml.net.arcs.add(outChanel);
         }
 
-        pnml.net.places.add(intermediate);
-        pnml.net.transitions.add(receive);
-        pnml.net.transitions.add(send);
-        pnml.net.arcs.add(beforeReceive);
-        pnml.net.arcs.add(afterReceive);
-        pnml.net.arcs.add(beforeSend);
 
         StringBuilder program = new StringBuilder();
         for(int i = 0 ; i < Program.size() ;i++){
@@ -125,18 +101,16 @@ public class BroastcastLink {
         variables.add(getMaxSendingRateVar());
         variables.add(getBuffer());
 
-        receiveProgram = new Program(receive.id,program.toString());
-        sendProgram = new Program(send.id,"");
+        chanelProgram = new Program(chanel.id,program.toString());
 
-        getPrograms().add(receiveProgram);
-        getPrograms().add(sendProgram);
+        getPrograms().add(chanelProgram);
 
-        programs.add(receiveProgram);
-        programs.add(sendProgram);
+        programs.add(chanelProgram);
 
     }
     public void generateCode(Sensor sensor){
-        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),sensor.getMaxSendingRateVar(),sensor.getMinSendingRateVar());
-        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(), getMaxSendingRateVar(),getMinSendingRateVar());
+        chanelProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),sensor.getMaxSendingRateVar(),sensor.getMinSendingRateVar()) +
+                System.lineSeparator() +
+                Code.CreateChaneltoSensorChanelPart(getBuffer(), getMaxSendingRateVar(),getMinSendingRateVar());
     }
 }

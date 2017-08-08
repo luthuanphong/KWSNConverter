@@ -16,7 +16,7 @@ public class Variable {
     /**
      * Datatype that used write in txrt file
      */
-    private static final String BOOL_TYPE = "bool";
+    private static final String BOOL_TYPE = "boolean";
     /**
      * Datatype that used write in txrt file
      */
@@ -70,6 +70,10 @@ public class Variable {
 
     public String getName(){
         return this.Name;
+    }
+
+    public BasicType getType(){
+        return this.Type;
     }
 
     public Variable(BasicType Type,String Name , String Value){

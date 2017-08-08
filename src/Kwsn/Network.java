@@ -15,4 +15,6 @@ public class Network {
     public String ChannelMaxBufferSize;
     @XmlElement(name = "Process")
     public ArrayList<Process> processes = new ArrayList<>();
+    @XmlAttribute(name = "NumberOfPackets")
+    public String NumberOfPacket;
 }

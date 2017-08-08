@@ -27,8 +27,7 @@ public class Link{
     private Variable MinSendingRateVar;
     private Variable MaxSendingRateVar;
     private List<Program> programList;
-    private Program sendProgram;
-    private Program receiveProgram;
+    private Program chanelProgram;
 
     public List<Program> getPrograms(){
         if(programList == null){
@@ -70,70 +69,44 @@ public class Link{
             HashMap<String,String> OutputPlace,
             ArrayList<Program> programs,ArrayList<Variable> variables){
 
-        Place intermediatePlace = new Place();
-        intermediatePlace.id="Intermediate"+this.id;
-        intermediatePlace.label = "Intermediate "+this.id;
+        Transition chanel = new Transition();
+        chanel.id = "chanel_"+this.id;
 
-        Transition receive = new Transition();
-        receive.id = "receive"+this.id;
-        receive.label = "recive "+this.id;
+        Arc inChanel = new Arc();
+        inChanel.id = "In_"+this.id;
+        inChanel.label = "Input "+this.id;
+        inChanel.weight = 1;
+        inChanel.place = OutputPlace.get(this.From);
+        inChanel.transition = chanel.id;
+        inChanel.direction = ArcDirection.PLACE_TO_TRANSITION;
 
-        Transition send = new Transition();
-        send.id = "send"+this.id;
-        send.label = "send "+this.id;
+        Arc outChanel = new Arc();
+        outChanel.id = "Out_"+this.id;
+        outChanel.label = "Output "+this.id;
+        outChanel.weight = 1;
+        outChanel.transition = chanel.id;
+        outChanel.place = InputPlaces.get(this.To);
+        outChanel.direction = ArcDirection.TRANSITION_TO_PLACE;
 
-        Arc beforeReceive = new Arc();
-        beforeReceive.id = "beforeReceive"+this.id;
-        beforeReceive.weight = 1;
-        beforeReceive.direction = ArcDirection.PLACE_TO_TRANSITION;
-        beforeReceive.place = OutputPlace.get(this.From);
-        beforeReceive.transition = receive.id;
-
-        Arc afterReceive = new Arc();
-        afterReceive.id="afterReceive"+this.id;
-        afterReceive.weight = 1;
-        afterReceive.direction = ArcDirection.TRANSITION_TO_PLACE;
-        afterReceive.place = intermediatePlace.id;
-        afterReceive.transition = receive.id;
-
-        Arc beforeSend = new Arc();
-        beforeSend.id = "beforeSend"+this.id;
-        beforeSend.weight = 1;
-        beforeSend.direction = ArcDirection.PLACE_TO_TRANSITION;
-        beforeSend.place = intermediatePlace.id;
-        beforeSend.transition = send.id;
-
-        Arc afterSend = new Arc();
-        afterSend.id="afterSend"+this.id;
-        afterSend.weight = 1;
-        afterSend.direction = ArcDirection.TRANSITION_TO_PLACE;
-        afterSend.place = InputPlaces.get(this.To);
-        afterSend.transition = send.id;
-
-        pnml.net.places.add(intermediatePlace);
-        pnml.net.transitions.add(receive);
-        pnml.net.transitions.add(send);
-        pnml.net.arcs.add(beforeReceive);
-        pnml.net.arcs.add(afterReceive);
-        pnml.net.arcs.add(beforeSend);
-        pnml.net.arcs.add(afterSend);
+        pnml.net.transitions.add(chanel);
+        pnml.net.arcs.add(inChanel);
+        pnml.net.arcs.add(outChanel);
 
         variables.add(getMaxSendingRateVar());
         variables.add(getMinSendingRateVar());
         variables.add(getBuffer());
 
-        receiveProgram = new Program(receive.id,this.Program);
-        sendProgram = new Program(send.id,"");
+        chanelProgram = new Program(chanel.id,this.Program);
 
-        getPrograms().add(receiveProgram);
-        getPrograms().add(sendProgram);
+        getPrograms().add(chanelProgram);
 
-        programs.add(receiveProgram);
-        programs.add(sendProgram);
+        programs.add(chanelProgram);
+
     }
 
     public void generateCode(Sensor sensor){
-        receiveProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),sensor.getMaxSendingRateVar(),sensor.getMinSendingRateVar());
-        sendProgram.Code = Code.CreateChaneltoSensorChanelPart(getBuffer(), getMaxSendingRateVar(),getMinSendingRateVar());
+        chanelProgram.Code =Code.CreateSensorToChanelChanelPart(getBuffer(),sensor.getMaxSendingRateVar(),sensor.getMinSendingRateVar()) +
+                System.lineSeparator() +
+                Code.CreateChaneltoSensorChanelPart(getBuffer(), getMaxSendingRateVar(),getMinSendingRateVar());
     }
 }
