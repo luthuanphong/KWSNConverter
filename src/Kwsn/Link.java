@@ -38,7 +38,7 @@ public class Link{
 
     public Variable getBuffer(){
         if(this.Buffer == null){
-            this.Buffer = new Variable(BasicType.FLOAT,"Buffer_"+this.id,"0");
+            this.Buffer = new Variable(BasicType.FLOAT,"Chanel_Buffer_"+this.id,"0");
         }
         return this.Buffer;
     }

@@ -28,7 +28,7 @@ public class main {
         //WSN wsn = (WSN) unmarshaller.unmarshal(new File("C:\\Data\\luanvan\\GraduationThesis\\5-sensors.kwsn"));
 
         KwsnConverter converter = new KwsnConverter();
-        converter.SaveConvertFile("C:\\Users\\FredLu\\Desktop\\3-sensor.kwsn",
+        converter.SaveConvertFile("C:\\Users\\FredLu\\Desktop\\5-sensors.kwsn",
                 "C:\\Users\\FredLu\\Desktop\\",SensorEnergy,energyRule,"1","1","1",KwsnConverter.BROADCAST);
 
     }

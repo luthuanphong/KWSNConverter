@@ -55,14 +55,14 @@ public class Sensor {
 
     public Variable getBuffer(){
         if(this.Buffer == null){
-            this.Buffer = new Variable(BasicType.FLOAT,"Buffer_"+this.Id,"0");
+            this.Buffer = new Variable(BasicType.FLOAT,"Sensor_Buffer_"+this.Id,"0");
         }
         return Buffer;
     }
 
     public Variable getQueue(){
         if(this.Queue == null){
-            this.Queue = new Variable(BasicType.FLOAT,"Queue_"+this.Id,"0");
+            this.Queue = new Variable(BasicType.FLOAT,"Sensor_Queue_"+this.Id,"0");
         }
         return Queue;
     }

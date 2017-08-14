@@ -12,7 +12,9 @@ public class Code {
 
         StringBuilder code = new StringBuilder();
         code.append(Constants.NUMBER_OF_PACKAGES).append("=").append(Constants.NUMBER_OF_PACKAGES).append(" - ").append("randomInt(").append("1").append(",").append(Constants.NUMBER_OF_PACKAGES).append(")").append(";");
-        code.append("float ").append("temp").append("=").append(buffer.getName()).append(" - ").append("1/").append("randomInt").append("(").append(MinProcessingRate.getName()).append(",").append(MaxprocessingRate.getName()).append(")").append(";");
+        code.append(System.lineSeparator());
+        code.append("float ").append("temp").append("=").append(buffer.getName()).append(" - ").append("randomInt").append("(").append(MinProcessingRate.getName()).append(",").append(MaxprocessingRate.getName()).append(")").append(";");
+        code.append(System.lineSeparator());
         code.append("if(").append("0").append("<").append("temp").append(")");
         code.append("{");
         code.append(System.lineSeparator());
@@ -42,7 +44,8 @@ public class Code {
     public static String CreateSensorProcessingCode(
             Variable buffer, Variable queue, Variable MaxprocessingRate , Variable MinProcessingRate , Variable energy , HashMap<String,String> energyRule){
         StringBuilder code = new StringBuilder();
-        code.append("float ").append("temp").append("=").append(buffer.getName()).append(" - ").append("1/").append("randomInt").append("(").append(MinProcessingRate.getName()).append(",").append(MaxprocessingRate.getName()).append(")").append(";");
+        code.append("float ").append("temp").append("=").append(buffer.getName()).append(" - ").append("randomInt").append("(").append(MinProcessingRate.getName()).append(",").append(MaxprocessingRate.getName()).append(")").append(";");
+        code.append(System.lineSeparator());
         code.append("if(").append("0").append("<").append("temp").append(")");
         code.append("{");
         code.append(System.lineSeparator());
@@ -73,7 +76,7 @@ public class Code {
             Variable Queue, Variable MaxsendingRate, Variable MinsendingRate, Variable energy, HashMap<String,String> energyRule){
         StringBuilder code = new StringBuilder();
         code.append(System.lineSeparator());
-        code.append(Queue.getName()).append("=").append(Queue.getName()).append("-").append("1/").append("randomInt").append("(").append(MinsendingRate.getName()).append(",").append(MaxsendingRate.getName()).append(")").append(";");
+        code.append(Queue.getName()).append("=").append(Queue.getName()).append("-").append("randomInt").append("(").append(MinsendingRate.getName()).append(",").append(MaxsendingRate.getName()).append(")").append(";");
         code.append(System.lineSeparator());
         code.append(energy.getName()).append(" = ").append(energy.getName()).append(" - ").append(energyRule.getOrDefault("send","1")).append(";");
         return code.toString();
@@ -84,7 +87,7 @@ public class Code {
                 code.append(System.lineSeparator());
                 code.append(Buffer.getName())
                         .append("=")
-                        .append(Buffer.getName()).append("+").append("1/").append("randomInt(").append(MinsendingRate.getName()).append(",").append(MaxsendingRate.getName()).append(")").append(";");
+                        .append(Buffer.getName()).append("+").append("randomInt(").append(MinsendingRate.getName()).append(",").append(MaxsendingRate.getName()).append(")").append(";");
                 code.append(System.lineSeparator());
                 code.append("if(").append(Buffer.getName()).append(" > ").append(Constants.CHANEL_MAX_BUFFER_SIZE).append(")").append(System.lineSeparator());
                 code.append("{").append(System.lineSeparator());
@@ -96,7 +99,8 @@ public class Code {
 
     public static String CreateChaneltoSensorChanelPart(Variable buffer,Variable MaxTranmitionRate, Variable MinTramitionRate){
         StringBuilder code = new StringBuilder();
-        code.append("float ").append("temp").append(" = ").append(buffer.getName()).append("- 1/").append("randomInt(").append(MinTramitionRate.getName()).append(",").append(MaxTranmitionRate.getName()).append(")").append(";");
+        code.append("float ").append("temp").append(" = ").append(buffer.getName()).append("randomInt(").append(MinTramitionRate.getName()).append(",").append(MaxTranmitionRate.getName()).append(")").append(";");
+        code.append(System.lineSeparator());
         code.append("if(").append("0").append("<").append("temp").append(")");
         code.append("{");
         code.append(System.lineSeparator());
@@ -119,7 +123,7 @@ public class Code {
         StringBuilder code = new StringBuilder();
         code.append(System.lineSeparator());
         code.append(buffer.getName())
-                .append("=").append(buffer.getName()).append("+").append("1/").append("randomInt(").append(MinTranmintionRate.getName()).append(",").append(MaxTranmitionRate.getName()).append(");");
+                .append("=").append(buffer.getName()).append("+").append("randomInt(").append(MinTranmintionRate.getName()).append(",").append(MaxTranmitionRate.getName()).append(");");
         code.append(System.lineSeparator());
         code.append("if(").append(buffer.getName()).append(" > ").append(Constants.SENSOR_MAX_BUFFER_SZIE).append(")");
         code.append("{").append(System.lineSeparator());
